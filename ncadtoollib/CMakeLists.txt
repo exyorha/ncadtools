@@ -24,7 +24,6 @@ add_library(ncadtoollib STATIC
 	include/ncadtoollib/NGWire.h
 	NGBaseBlock.cpp
 	NGCachedString.cpp
-	NGCountedArray.cpp
 	NGDesign.cpp
 	NGDFile.cpp
 	NGInputStream.cpp
@@ -43,7 +42,6 @@ add_library(ncadtoollib STATIC
 	NGSignal.cpp
 	NGStream.cpp
 	NGStringCache.cpp
-	NGTaggedUnion.cpp
 	NGWire.cpp
 )
 target_include_directories(ncadtoollib PUBLIC include)
