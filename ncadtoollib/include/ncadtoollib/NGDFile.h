@@ -30,7 +30,6 @@ namespace ncadtoollib {
 
 		static constexpr uint32_t expectedSignature = 0xC0D0E0F0;
 		static constexpr const char* expectedVersionMajor = "2";
-		static constexpr const char* expectedVersionMinor = "15";
 		static constexpr uint8_t expectedUnknown1 = 0;
 	};
 

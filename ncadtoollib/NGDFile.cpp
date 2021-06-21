@@ -23,13 +23,19 @@ namespace ncadtoollib {
 			throw std::runtime_error("Unexpected NGD file signature: read " + std::to_string(obj.signature) + ", expected " + std::to_string(NGDFile::expectedSignature));
 		}
 
-		stream >> obj.versionMajor >> obj.versionMinor >> obj.unknown1;
+		stream >> obj.versionMajor >> obj.versionMinor;
 
 		if (obj.versionMajor != NGDFile::expectedVersionMajor ||
-			obj.versionMinor != NGDFile::expectedVersionMinor ||
-			obj.expectedUnknown1 != NGDFile::expectedUnknown1)
-			throw std::runtime_error(std::string("unexpected NGD version: expected major ") + NGDFile::expectedVersionMajor + ", minor " + NGDFile::expectedVersionMinor + ", unknown1 " +
-				std::to_string(NGDFile::expectedUnknown1) + ", got major " + obj.versionMajor + ", minor " + obj.versionMinor + ", unknown1 " + std::to_string(obj.unknown1));
+			(obj.versionMinor != "15" && obj.versionMinor != "13"))
+			throw std::runtime_error("unexpected NGD version: major " + obj.versionMajor + ", minor " + obj.versionMinor);
+
+		if (obj.versionMinor == "15") {
+			stream >> obj.unknown1;
+
+			if (obj.unknown1 != NGDFile::expectedUnknown1)
+				throw std::runtime_error("unexpected NGD unknown1 value: " + std::to_string(obj.unknown1));
+
+		}
 
 		stream >> obj.isEncrypted;
 

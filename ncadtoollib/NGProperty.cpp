@@ -12,7 +12,7 @@ namespace ncadtoollib {
 	}
 
 	std::string NGProperty::valueAsVerilogFriendlyToken() const {
-		return "<UNREPRESENTABLE PROPERTY>";
+		return "1";
 	}
 
 	std::string NGPropertyInteger::valueAsString() const {
