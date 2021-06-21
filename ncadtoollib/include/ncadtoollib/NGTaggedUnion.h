@@ -11,17 +11,18 @@ namespace ncadtoollib {
 	class NGStream;
 
 	template<typename TagType, typename... Args>
-	class NGTaggedUnion final : public std::variant<Args...> {
-
+	class NGTaggedUnion final  {
+	public:
+		std::variant<Args...> variant;		
 	};
 
 	template<typename TagType, typename... Args>
 	NGStream& operator <<(NGStream& stream, const NGTaggedUnion<TagType, Args...>& obj) {
-		stream << static_cast<TagType>(obj.index());
+		stream << static_cast<TagType>(obj.variant.index());
 
 		std::visit([&stream](const auto& value) {
 			stream << value;
-		}, obj);
+		}, obj.variant);
 
 		return stream;
 	}
@@ -33,7 +34,7 @@ namespace ncadtoollib {
 		}
 		else {
 			if (index == 0) {
-				variant.emplace<Index>();
+				variant.template emplace<Index>();
 			}
 			else {
 				ngTaggedUnionVariantFromTag<Variant, Index + 1>(variant, index - 1);
@@ -46,11 +47,11 @@ namespace ncadtoollib {
 		TagType tag;
 		stream >> tag;
 
-		ngTaggedUnionVariantFromTag(static_cast<std::variant<Args...> &>(obj), tag);
+		ngTaggedUnionVariantFromTag(obj.variant, tag);
 
 		std::visit([&stream](auto& value) {
 			stream >> value;
-		}, obj);
+		}, obj.variant);
 
 		return stream;
 	}

@@ -1,6 +1,7 @@
 #include <ncadtoollib/NGInputStream.h>
 
 #include <stdexcept>
+#include <string.h>
 
 namespace ncadtoollib {
 	NGInputStream::NGInputStream(const uint8_t* data, size_t dataSize) : m_ptr(data), m_end(data + dataSize) {

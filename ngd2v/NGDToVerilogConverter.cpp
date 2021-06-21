@@ -22,7 +22,7 @@ void NGDToVerilogConverter::convert() {
 		" *\n";
 
 	for (const auto& propVariant : m_ngd.netlistObject.properties.properties) {
-		const auto &prop = ncadtoollib::propertyFromVariant(propVariant);
+		const auto &prop = ncadtoollib::propertyFromVariant(propVariant.variant);
 
 		m_output << " * " << prop.propertyName.string();
 
@@ -40,7 +40,7 @@ void NGDToVerilogConverter::convert() {
 		"\n";
 
 	for (const auto& modVariant : m_ngd.hierarchy.blocks) {
-		const auto& mod = ncadtoollib::moduleFromVariant(modVariant);
+		const auto& mod = ncadtoollib::moduleFromVariant(modVariant.variant);
 		
 		m_moduleMap.emplace(mod.thisModuleId, modVariant);
 		m_moduleChildren.emplace(mod.parentModuleId, mod.thisModuleId);
@@ -94,12 +94,12 @@ void NGDToVerilogConverter::writeModuleToOutput(uint32_t moduleId) {
 }
 
 std::string NGDToVerilogConverter::getModuleName(const ncadtoollib::NGDModuleVariant& moduleVariant) {
-	const auto& mod = ncadtoollib::moduleFromVariant(moduleVariant);
+	const auto& mod = ncadtoollib::moduleFromVariant(moduleVariant.variant);
 
 	auto moduleName = mod.objectName.string();
 
 	for (const auto& propVariant : mod.properties.properties) {
-		const auto& prop = ncadtoollib::propertyFromVariant(propVariant);
+		const auto& prop = ncadtoollib::propertyFromVariant(propVariant.variant);
 		const auto& name = prop.propertyName.string();
 
 		if (name == "TYPE") {
@@ -114,7 +114,7 @@ std::string NGDToVerilogConverter::getModuleName(const ncadtoollib::NGDModuleVar
 std::string NGDToVerilogConverter::convertModuleBodyToString(const ncadtoollib::NGDModuleVariant& moduleVariant) {
 	std::stringstream ss;
 
-	const auto& mod = ncadtoollib::moduleFromVariant(moduleVariant);
+	const auto& mod = ncadtoollib::moduleFromVariant(moduleVariant.variant);
 
 	std::unordered_map<uint32_t, std::string> wireNames;
 	writeModuleInterfaceSection(ss, moduleVariant, wireNames);
@@ -130,7 +130,7 @@ std::string NGDToVerilogConverter::convertModuleBodyToString(const ncadtoollib::
 			throw std::logic_error("child module not found");
 
 		const auto& childVariant = childVariantIt->second;
-		const auto& childMod = ncadtoollib::moduleFromVariant(childVariant);
+		const auto& childMod = ncadtoollib::moduleFromVariant(childVariant.variant);
 
 		auto childImplIt = m_moduleNames.find(childIt->second);
 		if (childImplIt == m_moduleNames.end())
@@ -142,7 +142,7 @@ std::string NGDToVerilogConverter::convertModuleBodyToString(const ncadtoollib::
 		bool hasAnyParameters = false;
 
 		for (const auto& propVariant : childMod.properties.properties) {
-			const auto& prop = ncadtoollib::propertyFromVariant(propVariant);
+			const auto& prop = ncadtoollib::propertyFromVariant(propVariant.variant);
 			const auto& name = prop.propertyName.string();
 			auto value = prop.valueAsString();
 
@@ -187,7 +187,7 @@ std::string NGDToVerilogConverter::convertModuleBodyToString(const ncadtoollib::
 void NGDToVerilogConverter::writeModuleInterfaceSection(std::ostream& stream, const ncadtoollib::NGDModuleVariant& moduleVariant, std::unordered_map<uint32_t, std::string>& wireNames) {
 	std::visit([&stream, &wireNames, this](const auto& mod) {
 		writeModuleInterfaceSection(stream, mod, wireNames);
-	}, moduleVariant);
+	}, moduleVariant.variant);
 }
 
 void NGDToVerilogConverter::writeModuleInterfaceSection(std::ostream& stream, const ncadtoollib::NGLogBlock& mod, std::unordered_map<uint32_t, std::string>& wireNames) {
@@ -255,7 +255,7 @@ void NGDToVerilogConverter::writePropertiesAsVerilogAttributes(std::ostream& str
 	bool firstProperty = true;
 
 	for (const auto& propVariant : properties.properties) {
-		const auto& prop = ncadtoollib::propertyFromVariant(propVariant);
+		const auto& prop = ncadtoollib::propertyFromVariant(propVariant.variant);
 
 		if (m_completelyHiddenParameters.count(prop.propertyName.string()) != 0)
 			continue;
@@ -271,7 +271,7 @@ void NGDToVerilogConverter::writePropertiesAsVerilogAttributes(std::ostream& str
 
 		stream << prop.propertyName.string();
 
-		if (!std::holds_alternative<ncadtoollib::NGProperty>(propVariant)) {
+		if (!std::holds_alternative<ncadtoollib::NGProperty>(propVariant.variant)) {
 			stream << " = " << prop.valueAsVerilogFriendlyToken();
 		}
 	}
@@ -326,10 +326,10 @@ void NGDToVerilogConverter::writeModuleImplementation(const std::string& moduleN
 		");\n"
 		"\n";
 
-	const auto& mod = ncadtoollib::moduleFromVariant(moduleVariant);
+	const auto& mod = ncadtoollib::moduleFromVariant(moduleVariant.variant);
 
 	for (const auto& propVariant : mod.properties.properties) {
-		const auto& prop = ncadtoollib::propertyFromVariant(propVariant);
+		const auto& prop = ncadtoollib::propertyFromVariant(propVariant.variant);
 		const auto& name = prop.propertyName.string();
 		auto value = prop.valueAsString();
 
@@ -355,7 +355,7 @@ void NGDToVerilogConverter::writeModuleImplementation(const std::string& moduleN
 
 
 void NGDToVerilogConverter::writeModulePins(std::ostream& stream, const ncadtoollib::NGDModuleVariant& moduleVariant) {
-	std::visit([this, &stream](const auto& mod) { writeModulePins(stream, mod); }, moduleVariant);
+	std::visit([this, &stream](const auto& mod) { writeModulePins(stream, mod); }, moduleVariant.variant);
 }
 
 void NGDToVerilogConverter::writeModulePins(std::ostream& stream, const ncadtoollib::NGLogBlock& mod) {
@@ -374,7 +374,7 @@ bool NGDToVerilogConverter::getObjectNameResolvingAliases(const ncadtoollib::NGO
 	originalName = object.objectName.string();
 
 	for (const auto& propVariant : object.properties.properties) {
-		const auto& prop = ncadtoollib::propertyFromVariant(propVariant);
+		const auto& prop = ncadtoollib::propertyFromVariant(propVariant.variant);
 		const auto& name = prop.propertyName.string();
 
 		if (name == "USER_ALIAS") {
@@ -407,7 +407,7 @@ void NGDToVerilogConverter::writeModulePins(std::ostream& stream, const std::vec
 void NGDToVerilogConverter::writeModuleConnections(std::ostream& stream, const ncadtoollib::NGDModuleVariant& moduleVariant, const std::unordered_map<uint32_t, std::string>& wireNames) {
 	std::visit([&stream, &wireNames, this](const auto& mod) {
 		writeModuleConnections(stream, mod, wireNames);
-	}, moduleVariant);
+	}, moduleVariant.variant);
 }
 
 void NGDToVerilogConverter::writeModuleConnections(std::ostream& stream, const ncadtoollib::NGLogBlock& mod, const std::unordered_map<uint32_t, std::string>& wireNames) {
