@@ -6,8 +6,12 @@ namespace ncadtoollib {
 		stream
 			<< obj.signature
 			<< obj.versionMajor
-			<< obj.versionMinor
-			<< obj.unknown1
+			<< obj.versionMinor;
+
+		if (obj.versionMinor == "15")
+			stream << obj.unknown1;
+
+		stream
 			<< obj.isEncrypted
 			<< obj.netlistNCH
 			<< obj.netlistObject
