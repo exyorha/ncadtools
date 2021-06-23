@@ -52,7 +52,7 @@ private:
 	void writeModulePins(std::ostream& stream, const std::vector<T>& pins);
 
 	template<typename T>
-	void writeWireDefinition(const char* directionKeyword, std::ostream& stream, const T& wire, std::unordered_map<uint32_t, std::string>& wireNames);
+	void writeWireDefinition(const char* directionKeyword, std::ostream& stream, const T& wire, std::unordered_map<uint32_t, std::string>& wireNames, bool isPort);
 
 	void writePropertiesAsVerilogAttributes(std::ostream& stream, const ncadtoollib::NGPropertySet& properties);
 

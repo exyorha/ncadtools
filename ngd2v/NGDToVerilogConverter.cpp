@@ -120,7 +120,7 @@ std::string NGDToVerilogConverter::convertModuleBodyToString(const ncadtoollib::
 	writeModuleInterfaceSection(ss, moduleVariant, wireNames);
 
 	for (const auto& wire : mod.wires) {
-		writeWireDefinition("wire", ss, wire, wireNames);
+		writeWireDefinition("wire", ss, wire, wireNames, false);
 	}
 
 	auto childRange = m_moduleChildren.equal_range(mod.thisModuleId);
@@ -203,20 +203,36 @@ void NGDToVerilogConverter::writeModuleInterfaceSection(std::ostream& stream, co
 }
 
 template<typename T>
-void NGDToVerilogConverter::writeWireDefinition(const char* directionKeyword, std::ostream& stream, const T& wire, std::unordered_map<uint32_t, std::string>& wireNames) {
-	if (wire.internalConnectionId != 0 && wireNames.count(wire.internalConnectionId) != 0)
-		return;
+void NGDToVerilogConverter::writeWireDefinition(const char* directionKeyword, std::ostream& stream, const T& wire, std::unordered_map<uint32_t, std::string>& wireNames, bool isPort) {
+	bool hasPrimaryConnection = false;
+	std::string primaryConnectionName;
+
+	if (wire.internalConnectionId != 0) {
+		auto it = wireNames.find(wire.internalConnectionId);
+		if (it != wireNames.end()) {
+			if (!isPort)
+				return;
+
+			hasPrimaryConnection = true;
+			primaryConnectionName = it->second;
+		}
+	}
 
 	std::string originalName, actualName;
 	bool wasRenamed = getObjectNameResolvingAliases(wire, originalName, actualName);
 
-	if (wire.internalConnectionId != 0) {
+	if (wire.internalConnectionId != 0 && !hasPrimaryConnection) {
 		wireNames.emplace(wire.internalConnectionId, actualName);
 	}
 
 	writePropertiesAsVerilogAttributes(stream, wire.properties);
 
-	stream << "  " << directionKeyword << " " << makeVerilogIdentifier(actualName) << ";";
+	stream << "  " << directionKeyword << " " << makeVerilogIdentifier(actualName);
+	
+	if (hasPrimaryConnection)
+		stream << " = " << primaryConnectionName;
+	
+	stream << ";";
 
 	if (wasRenamed)
 		stream << " // original name: " << originalName;
@@ -246,7 +262,7 @@ void NGDToVerilogConverter::writeModuleInterfaceSection(std::ostream& stream, co
 			throw std::logic_error("unsupported pin direction in NGD: " + std::to_string(pin.direction));
 		}
 
-		writeWireDefinition(directionKeyword, stream, pin, wireNames);
+		writeWireDefinition(directionKeyword, stream, pin, wireNames, true);
 
 	}
 }
